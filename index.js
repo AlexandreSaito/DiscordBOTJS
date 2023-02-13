@@ -36,7 +36,7 @@ const server = http.createServer(async function(req, res) {
 	let query = q.query;
 	if (q.pathname == '/') {
 		res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' });
-		res.write("OK - " + (dConfig.botOn ? "ON" : "OFF") + " - " + discordAudio.getState());
+		res.write("OK - " + (dConfig.botOn ? "ON" : "OFF") + " - " + discordAudio.getCurrentState());
 		res.end();
 		if (!dConfig.botOn) {
 			botOffCounter += 1;
@@ -77,7 +77,7 @@ const server = http.createServer(async function(req, res) {
 		try {
 			let video = q.query.video;
 			let s = ytdl(video, { quality: "lowestaudio", filter: 'audioonly', format: 'webm' });
-			s.pipe(res, { end: false });
+			s.pipe(fs.createWriteStream('video.mp4'), { end: false });
 			console.log("started video link!");
 			s.on('error', (e) => {
 				console.error("error " + e);

@@ -1,14 +1,14 @@
-const discordAudio = require('./discordAudio.js');
+const dAudio = require('./discordAudio.js');
 
 async function addPlayMusic(interaction){
-	console.log("ADICIONANDO MUSICA")
-	console.log(interaction.options)
+	console.log("[DISCORD AUDIO HANDLER] options: ", interaction.options);
+	
 	let url = interaction.options.get("url");
 	if(!url || !url.value || url.value == ""){
 		await interaction.reply(`Não encontrado, manda um link ai seu merda!`);
 	}
 	url = url.value;
-	await interaction.reply(`Metendo musiguinha ${url}...`);
+	await interaction.reply(`Tá na lista para tocar ${url}`);
 
 	if(interaction.member.voice.channel == null || !interaction.member.voice.channel.joinable){
 		await interaction.followUp({ content: 'To podendo entrar ai não!', ephemeral: true });
@@ -16,29 +16,23 @@ async function addPlayMusic(interaction){
 	}
 	joinChannel(interaction.member.voice.channel);
 	
-	discordAudio.addMusicUrl(url);
-	await interaction.followUp({ content: 'Chxabum!', ephemeral: true });
+	dAudio.addMusicUrl(url);
 }
 
 function joinChannel(channel){
-	discordAudio.joinChannel(channel);
+	dAudio.joinChannel(channel);
 }
 
 function skipMusic(){
-	discordAudio.skipMusic(skipMusic);
-}
-
-function removeFromChannel(channel){
-	
+	dAudio.skipMusic(skipMusic);
 }
 
 function stopMusic(){
-	discordAudio.deleteAudioPlayer();
+	dAudio.deleteAudioPlayer();
 }
 
 module.exports = { 
 	joinChannel,
-	removeFromChannel,
 	stopMusic,
 	addPlayMusic,
 	skipMusic

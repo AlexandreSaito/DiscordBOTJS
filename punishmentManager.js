@@ -1,4 +1,5 @@
-const discordClient = require('./discordClient.js');
+const dClient = require('./discordClient.js');
+
 const PunishmentType = {
 	salaDoCastigo: 'salaDoCastigo',
 };
@@ -19,8 +20,7 @@ function addPunishment(userId, time, type, params) {
 		start: Date.now(),
 		params: params
 	});
-	console.log("added punishments");
-	console.log(usersToBePunished);
+	console.log("[PUNISHMENT MANAGER] User to be punished list: ", usersToBePunished);
 }
 
 function getPunishments(type, userId = null) {
@@ -37,16 +37,8 @@ function getPunishments(type, userId = null) {
 
 function removeFromPunishment(up) {
 	if (Date.now() >= up.start + up.time) {
-		/*if (up.params && up.params.channel && up.params.channel.delete) {
-			let client = discordClient.getClient();
-			client.channels.fetch(up.params.channel.id).then(channel => {
-			//	if (channel)
-			//		channel.delete();
-			});
-		}*/
 		let index = usersToBePunished.indexOf(up);
-		console.log("index: ", index);
-		//usersToBePunished = usersToBePunished.splice(index, 1);
+		console.log("[PUNISHMENT MANAGER] RemoveFromPunishment Index: ", index);
 		if(index != -1){
 			delete usersToBePunished[index];
 			return true;

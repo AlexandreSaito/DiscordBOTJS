@@ -1,8 +1,8 @@
-const discordClient = require("./../discordClient.js");
-const discordTtsHandler = require('./../discordTtsHandler.js');
-const audioHandler = require('./../discordAudioHandler.js');
-const pm = require('./../punishmentManager.js');
+const dClient = require("./../discordClient.js");
 const dConfig = require('./../discordConfig.js');
+const dTTSHandler = require('./../discordTtsHandler.js');
+const dAudioHandler = require('./../discordAudioHandler.js');
+const pm = require('./../punishmentManager.js');
 
 const MINGUEL_ID = process.env['MINGUEL_ID'];
 const MAGNUM_ID = process.env['MAGNUM_ID'];
@@ -17,7 +17,7 @@ function onVoiceStateUpdate(oldState, newState) {
 	if(!newState.channel) return;
 
 	let userId = newState.member.user.id;
-	let client = discordClient.getClient();
+	let client = dClient.getClient();
 
 	if (newState.id === client.user.id && newState.serverMute)
 		newState.setMute(false);
@@ -46,13 +46,13 @@ function onVoiceStateUpdate(oldState, newState) {
 	if (dConfig.encherOSaco && isJoinable) {
 
 		if (userId == MINGUEL_ID) {
-			audioHandler.joinChannel(newState.channel);
-			discordTtsHandler.sendHelpMessage();
+			dAudioHandler.joinChannel(newState.channel);
+			dTTSHandler.sendHelpMessage();
 		}
 
 		if (userId == MAGNUM_ID) {
-			audioHandler.joinChannel(newState.channel);
-			discordTtsHandler.sendTts('ALGUEM MANDA UMA FOFOCA AI?');
+			dAudioHandler.joinChannel(newState.channel);
+			dTTSHandler.sendTts('ALGUEM MANDA UMA FOFOCA AI?');
 		}
 
 	}

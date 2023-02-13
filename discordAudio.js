@@ -1,7 +1,10 @@
 const discordAudio = require('@discordjs/voice');
+const fs = require('fs');
 const ytdl = require('ytdl-core');
 const memoryStream = require('memorystream');
 const nodeFetch = require('@replit/node-fetch');
+const playlistHandler = require('./playlistHandler.js');
+const dc = require('./discordConfig.js');
 
 const urlOembed = 'https://www.youtube.com/oembed?format=json&url=';
 
@@ -10,18 +13,25 @@ const urlOembed = 'https://www.youtube.com/oembed?format=json&url=';
 var connection;
 var sub;
 var player;
+
 var urls = [];
 var resources = [];
-var getNext = false;
-var state;
-var join;
-var musicChatChannel;
 
-function setMusicChatChannel(channel){
-	musicChatChannel = channel;
+var state;
+var getNext = false;
+
+var playlist;
+
+function sendToMusicChannel(text){
+	let musicChatChannel = dc.channels.getMusicChatChannel();
+	if(!musicChatChannel){
+		console.error("[DISCORD AUDIO] Can't send message to music channel!")
+		return;
+	}
+	musicChatChannel.send(text);
 }
 
-function getState() {
+function getCurrentState() {
 	return state;
 }
 
@@ -47,35 +57,32 @@ function addMusicUrl(url) {
 	}
 }
 
-function sendToMusicChannel(text){
-	if(musicChatChannel && musicChatChannel != null)
-	musicChatChannel.send(text);
-}
-
 function getNextMusic() {
-	if (urls.length == 0)
+	if (urls.length == 0){
+		getNextOnPlaylist();
 		return;
+	}
 	console.log("getting next music");
 	state = 'downloading';
 	let m = urls.shift();
 	let url = m.url;
-
-	if(m.title)
-			sendToMusicChannel(`Tocando uma... musica ${m.title}`);
-	else
-			sendToMusicChannel(`Tocando uma... musica ${m.url}`);
 		
-	//m.channel.send(`Tocando uma... musica ${url}`);
 	let s = ytdl(url, { filter: 'audioonly', format: 'webm' });
 	let stream = new memoryStream();
 	s.pipe(stream, { end: false });
 	s.on('error', (e) => {
 		state = 'idle';
-		m.channel.send(`Deu erro aqui ó! Musica de merda: ${url}`);
+		sendToMusicChannel(`Deu erro aqui ó! Musica de merda: ${url}`);
 		console.error("[ERROR] " + e);
 	});
 	s.on("end", () => {
 		console.log("audio done download!")
+	
+		if(m.title)
+				sendToMusicChannel(`Tocando uma... musica ${m.title}`);
+		else
+				sendToMusicChannel(`Tocando uma... musica ${m.url}`);
+		
 		let state = getCurrentState();
 		addToResources(stream);
 		if (state != 'playing') {
@@ -88,6 +95,51 @@ function getNextQueue() {
 	if (resources.length == 0)
 		return null;
 	return resources.shift();
+}
+
+function getNextOnPlaylist(){
+	if(!playlist)
+		return;
+	
+	if(playlist.currentMusicId >= playlist.lastId){
+		playlist = null;
+		return;
+	}
+	
+	let music;
+	while(!music){
+		playlist.currentMusicId++;
+		
+		if(playlist.currentMusicId > playlist.lastId){
+			playlist = null;
+			return;
+		}
+		
+		music = playlist.data.find(x => x.id == playlist.currentMusicId);
+	}
+
+	let pInfo = playlistHandler.getInfo().find(x => x.id == playlist.playlistId);;
+
+	let fileName = `${playlistHandler.playlistFolder}/${pInfo.name}/${music.fileName}`;
+	
+	console.log("{FILENAME}", fileName);
+	
+	if(!fs.existsSync(fileName)){
+		addMusicUrl(music.url);
+		return;
+	}
+	
+	let	rs = fs.createReadStream(fileName);
+	let stream = new memoryStream();
+  rs.on("end", () => {
+		sendToMusicChannel(`Tocando uma... musica ${music.title}`);
+		addToResources(stream);
+		if (state != 'playing') {
+			playOnList();
+		}
+	});
+	rs.pipe(stream);
+	
 }
 
 function addToResources(stream, inlineAudio = null) {
@@ -110,13 +162,6 @@ function joinChannel(channel) {
 	});
 	createAudioPlayer();
 	subscribeChannel(connection);
-}
-
-function removeFromChannel(channel) {
-	if (sub)
-		sub.unsubscribe();
-	if (connection)
-		connection.destroy();
 }
 
 function createAudioPlayer() {
@@ -197,20 +242,13 @@ function subscribeChannel(connection) {
 	sub = connection.subscribe(player);
 }
 
-function getCurrentState() {
-	return state;
-}
-
 module.exports = {
 	getCurrentState,
 	addToResources,
 	playOnList,
 	joinChannel,
-	removeFromChannel,
 	deleteAudioPlayer,
 	getNextMusic,
 	addMusicUrl,
 	skipMusic,
-	getState,
-	setMusicChatChannel
 }
