@@ -1,4 +1,7 @@
 const dAudio = require('./discordAudio.js');
+const ytsr = require('ytsr');
+
+// https://github.com/TimeForANinja/node-ytsr
 
 async function addPlayMusic(interaction){
 	console.log("[DISCORD AUDIO HANDLER] options: ", interaction.options);
@@ -8,8 +11,18 @@ async function addPlayMusic(interaction){
 		await interaction.reply(`Não encontrado, manda um link ai seu merda!`);
 	}
 	url = url.value;
-	await interaction.reply(`Tá na lista para tocar ${url}`);
 
+	if(!url.includes('youtube')){
+		const searchResults = await ytsr(url, { gl: 'BR', hl: 'pt', pages: 1 });
+		if(searchResults.items.length == 0){
+			await interaction.editReply(`Não achei nada com ${url}`);
+			return;
+		}
+		url = searchResults.items[0].url;
+	}
+	
+	await interaction.reply(`Tá na lista para tocar ${url}`);
+	
 	if(interaction.member.voice.channel == null || !interaction.member.voice.channel.joinable){
 		await interaction.followUp({ content: 'To podendo entrar ai não!', ephemeral: true });
 		return;

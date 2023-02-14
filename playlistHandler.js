@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 
@@ -14,7 +15,7 @@ function getInfo() {
 	return JSON.parse(fs.readFileSync(`${playlistFolder}/${infoFile}`));
 }
 
-function getInfoById(id){
+function getInfoById(id) {
 	return getInfo().data.find(x => x.id == id)
 }
 
@@ -35,7 +36,7 @@ function getFilesOnPlaylist(playlistName) {
 
 function createPlaylist(playlistName) {
 	let folderName = `${playlistFolder}/${playlistName}`;
-	let playlistInfoFileName = `${playlistFolder}/${playlist}/${infoFile}`;
+	let playlistInfoFileName = `${playlistFolder}/${playlistName}/${infoFile}`;
 
 	if (fs.existsSync(folderName))
 		return null;
@@ -89,18 +90,18 @@ async function addMusicToPlaylist(url, playlistId, download = true) {
 	let playlistInfoFileName = `${playlistFolder}/${pInfo.name}/${infoFile}`;
 
 	let playlistInfo = getPlaylistInfo(playlist);
-	if (playlistInfo == null){
+	if (playlistInfo == null) {
 		playlistInfo = { lastId: 0, data: [] };
 	}
 
 	if (playlistInfo.data.length > 0) {
-		if(playlistInfo.data.filter(x => x.url == url).length > 0){
+		if (playlistInfo.data.filter(x => x.url == url).length > 0) {
 			return false;
 		}
 	}
 
 	let videoInfo = await ytdl.getBasicInfo(url, { downloadURL: true });
-	if(!videoInfo){
+	if (!videoInfo) {
 		return false;
 	}
 	//fs.writeFileSync('videoinfo.json', JSON.stringify(videoInfo, null, "\t"), {encoding:'utf8',flag:'w'})
@@ -140,6 +141,43 @@ async function addMusicToPlaylist(url, playlistId, download = true) {
 	return true;
 }
 
+function generatePlaylistEmbed(pInfo, playlistInfo) {
+	let qntEmbed = Math.ceil(playListInfo.data.length / countFieldInEmbed);
+	let embeds = [];
+
+	let timeAudioTotal = 0;
+	let withoutAudioTimer = 0;
+	playlistInfo.data.forEach(x => {
+		if (!x.duration || x.duration == 0) {
+			withoutAudioTimer++;
+			return;
+		}
+		timeAudioTotal += x.duration;
+	});
+
+	for (let i = 0; i < qntEmbed; i++) {
+		let videoListEmbed = new EmbedBuilder()
+			.setColor(0x0099FF)
+			.setTitle(pInfo.name)
+			.setDescription(`Esta playlist tem ${playlistInfo.data.length} itens e um tanto ai de tempo saca, n sei fazer conta tlg. Mentira é ${timeAudioTotal} segundos e ${withoutAudioTimer} não tem informação do tempo`)
+			.setTimestamp()
+			.setFooter({ text: `pag. ${i + 1} de ${qntEmbed}` });
+
+		let min = (i * countFieldInEmbed);
+		let total = min + countFieldInEmbed;
+		if (total > playlistInfo.data.length)
+			total = playlistInfo.data.length;
+
+		for (let y = min; y < total; y++) {
+			let info = playListInfo.data[i];
+			videoListEmbed.addFields({ name: `${info.id.padStart(3, '0')} - ${info.title}`, value: `url: ${info.url}` });
+		}
+
+		embeds.push(videoListEmbed);
+	}
+	return embeds;
+}
+
 module.exports = {
 	getPlaylistNames,
 	getFilesOnPlaylist,
@@ -151,4 +189,5 @@ module.exports = {
 	getInfo,
 	getInfoById,
 	playlistFolder,
+	generatePlaylistEmbed,
 };

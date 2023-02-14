@@ -242,11 +242,6 @@ function subscribeChannel(connection) {
 	sub = connection.subscribe(player);
 }
 
-function addPlaylist(newPlaylist){
-	playlist = newPlaylist;
-	playlist.currentMusicId = 0;
-}
-
 module.exports = {
 	getCurrentState,
 	addToResources,
@@ -256,5 +251,4 @@ module.exports = {
 	getNextMusic,
 	addMusicUrl,
 	skipMusic,
-	addPlaylist,
 }

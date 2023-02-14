@@ -1,19 +1,29 @@
 <h4>Hellow!</h4>
 
 <div>
-	<h5>By link</h5>
-	<input type="url" id="input" />
-	<button type="button" id="send" >Send</button>
-	<audio controls id="audio">
-		<source id="source" src="" type="audio/webm">
-	</audio>
+	<h3>Play a music using youtube URL</h3>
+	<div>
+		<input type="url" id="input" />
+		<button type="button" id="send" >Send</button>
+	</div>
+	<div>
+		<audio controls id="audio">
+			<source id="source" src="" type="audio/webm">
+		</audio>
+	</div>
 </div>
 
-<div>
+<!--<div>
 	<h5>Automatic</h5>
 	<audio controls>
 		<source src="audio?videoId=W_MKjaxRtE8" type="audio/webm">
 	</audio>
+</div>-->
+
+<div>
+	<h3>Envie uma mensagem no discord de otario</h3>
+	<input type="text" id="inputText" />
+	<button type="button" id="sendText" >Send</button>
 </div>
 
 <script>
@@ -21,6 +31,8 @@
 	var input = document.getElementById("input");
 	var source = document.getElementById("source");
 	var send = document.getElementById("send");
+	var sendText = document.getElementById("sendText");
+	var input = document.getElementById("inputText");
 	
 	send.addEventListener("click", function (e){
 		e.preventDefault();
@@ -29,4 +41,20 @@
 		audio.load(); //call this to just preload the audio without playing
   	audio.play(); //call this to play the song right away
 	})
+	
+	sendText.addEventListener("click", function (e){
+		e.preventDefault();
+
+		let text = inputText.value;
+		inputText.value = "";
+		fetch("/send", {
+		  method: "POST",
+			headers: {
+		    'Content-Type': 'application/json',
+		  },
+		  body: JSON.stringify({text: text}),
+		});
+		
+	})
+	
 </script>

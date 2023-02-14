@@ -31,51 +31,66 @@ module.exports = {
 				.setDescription('O nome.')
 				.setRequired(true)
 				.setAutocomplete(true)))
-		.addSubcommand(subcommand => subcommand
-			.setName('teste')
-			.setDescription('Busca informação da playlist'))
 	,
 	async autocomplete(interaction) {
 		const focused = interaction.options.getFocused(true);
 		console.log("focused subcommand:", interaction.options.getSubcommand());
 
 		let list = playlistHandler.getPlaylistNames();
-		let filtered = list.filter(choice => choice.startsWith(focused.value));
-		await interaction.respond(filtered.map(x => ({ name: x, value: x })));
+		//let filtered = list.filter(choice => choice.startsWith(focused.value));
+		await interaction.respond(list.map(x => ({ name: x, value: x })));
 
 	},
 	async execute(interaction) {
 		//await interaction.deferReply();
-		console.log("execute subcommand: ", interaction.options.getSubcommand());
-
 		let subCommandName = interaction.options.getSubcommand();
+		console.log("[PLAYLIST] Execute Subcommand: ", subCommandName);
 
-		if (subCommandName == "create") {
-
+		if (subCommandName == "play") {
+			let playlistName = interaction.options.getString('nome').trim();
+			let playlistInfo = playlistHandler.getPlaylistInfo(playlistName);
+			let pInfo = playlistHandler.getInfoById(playlistInfo.playlistId);
+			if (playlistInfo == null || pInfo == null) {
+				console.error("[PLAYLIST_PLAY] playlistInfo", playlistInfo);
+				console.error("[PLAYLIST_PLAY] pInfo", pInfo);
+				await interaction.reply("Esse aí só faltou criar para ter. Ou deu um problema, vai saber tlg? Mas vê se está criado mesmo. Qualquer coisa chama eu (O Saito, não o BOT).");
+				return;
+			}
+			await interaction.reply(`Playlist ${pInfo.id} - ${pInfo.name} // Tem ${playlistInfo.data.length} musicas...`);
+			// dAudio.addPlaylist(playlistInfo);
+			return;
 		}
 		else if (subCommandName == "create") {
 			let playlistName = interaction.options.getString('nome').trim();
+			
 			if (playlistName.length > 50) {
 				await interaction.reply("O nome pode ter no MAXIMO 50 caracteres.");
 				return;
 			}
+			
 			if (playlistName.includes("/") || playlistName.includes("\\")) {
 				await interaction.reply("Sem barrinha no nome fazendo favor...");
 				return;
 			}
+			
 			let info = playlistHandler.createPlaylist(playlistName);
-			if (info != null) {
-				await interaction.reply(`A Playlist ${info.id} - ${info.name} foi criado seu merda. Agora usa o /playlist info ai se não foi inutil criar...`);
+			if (info == null) {
+				await interaction.reply("Se fodeu, não deu para criar HAHAHAHA!");
 				return;
 			}
-			await interaction.reply("Se fodeu, não deu para criar HAHAHAHA!");
+			await interaction.reply(`A Playlist ${info.id} - ${info.name} foi criada seu merda. Agora usa o /playlist info ai se não foi inutil criar...`);
 			return;
 		}
 		else if (subCommandName == "info") {
 			let playlistName = interaction.options.getString('nome').trim();
-			let playListInfo = playlistHandler.getPlaylistInfo(playlistName);
-			let pInfo = playlistHandler.getInfo().find(x => x.name == playlistName);
-			if (playListInfo == null || pInfo == null) {
+			
+			let playlistInfo = playlistHandler.getPlaylistInfo(playlistName);
+			let pInfo = playlistHandler.getInfoById(playlistInfo.playlistId);
+			
+			console.error("[PLAYLIST_PLAY] playlistInfo", playlistInfo);
+			console.error("[PLAYLIST_PLAY] pInfo", pInfo);
+
+			if (playlistInfo == null || pInfo == null) {
 				await interaction.reply("Esse aí só faltou criar para ter. Ou deu um problema, vai saber tlg? Mas vê se está criado mesmo. Qualquer coisa chama eu (O Saito, não o BOT).");
 				return;
 			}
@@ -96,77 +111,15 @@ module.exports = {
 						.setStyle(ButtonStyle.Danger),
 				);
 
-			let qntEmbed = Math.ceil(playListInfo.data.length / countFieldInEmbed);
-			let embeds = [];
+			var embeds = playlistHandler.generatePlaylistEmbed(pInfo, playlistInfo);
 
-			let timeAudioTotal = 0;
-			let withoutAudioTimer = 0;
-			playListInfo.data.forEach(x => {
-				if (!x.duration || x.duration == 0) {
-					withoutAudioTimer++;
-					return;
-				}
-				timeAudioTotal += x.duration;
-			});
-
-			for (let i = 0; i < qntEmbed; i++) {
-				let videoListEmbed = new EmbedBuilder()
-					.setColor(0x0099FF)
-					.setTitle(pInfo.name)
-					.setDescription(`Esta playlist tem ${playListInfo.data.length} itens e um tanto ai de tempo saca, n sei fazer conta tlg. (Mentira é ${timeAudioTotal} segundos e ${withoutAudioTimer} não tem informação do tempo)`)
-					.setTimestamp()
-					.setFooter({ text: `pag. ${i + 1} de ${qntEmbed}` });
-
-				let min = (i * countFieldInEmbed);
-				let total = min + countFieldInEmbed;
-
-				if (total > playListInfo.data.length)
-					total = playListInfo.data.length;
-
-				for (let y = min; y < total; y++) {
-					let info = playListInfo.data[i];
-					videoListEmbed.addFields({ name: `${info.id} - ${info.title}`, value: `url: ${info.url}` });
-				}
-
-				embeds.push(videoListEmbed);
+			if(embeds.length == 0){
+				await interaction.reply(`Nenhuma musica encontrada na Playlist ${pInfo.name}`);
+			}else{
+				await interaction.reply({ embeds: embeds });
 			}
-
-			await interaction.reply({ embeds: embeds });
 			await interaction.followUp({ ephemeral: true, components: [rowWithPlaylistButtons] });
-
 			return;
-		}
-		else if (subCommandName == "teste") {
-			let videos = [];
-
-			for (let i = 0; i < 55; i++) {
-				videos.push({ title: "um titulo", url: "http://youtube.com/watch?v=WGclLoxZz18", id: i });
-			}
-
-			let qntEmbed = Math.ceil(videos.length / 25);
-			let embeds = [];
-
-			for (let i = 0; i < qntEmbed; i++) {
-				let videoListEmbed = new EmbedBuilder()
-					.setColor(0x0099FF)
-					.setTitle('Nome da playlist')
-					.setDescription(`Esta playlist tem ${videos.length} itens e um tanto ai de tempo saca, n sei fazer conta tlg`)
-					.setTimestamp()
-					.setFooter({ text: `pag. ${i + 1} de ${qntEmbed}` });
-
-				let total = (i * 25) + 25;
-				if (total > videos.length)
-					total = videos.length;
-				for (let y = (i * 25); y < total; y++) {
-					videoListEmbed.addFields({ name: `${videos[y].id} - ${videos[y].title}`, value: `url: ${videos[y].url}` });
-				}
-
-				embeds.push(videoListEmbed);
-			}
-
-			await interaction.reply({ embeds: embeds });
-			await interaction.followUp({ ephemeral: true, components: [rowWithPlaylistButtons] });
-
 		}
 
 	},

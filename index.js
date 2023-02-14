@@ -3,7 +3,7 @@ const url = require('url');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 const discord = require('./discordHandler.js');
-const discordAudio = require("./discordAudio.js");
+const dAudio = require("./discordAudio.js");
 const dConfig = require("./discordConfig.js");
 
 const { exec } = require("child_process");
@@ -36,7 +36,7 @@ const server = http.createServer(async function(req, res) {
 	let query = q.query;
 	if (q.pathname == '/') {
 		res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' });
-		res.write("OK - " + (dConfig.botOn ? "ON" : "OFF") + " - " + discordAudio.getCurrentState());
+		res.write(`OK - ${dConfig.botOn ? "ON" : "OFF"} - ${dAudio.getCurrentState()}`);
 		res.end();
 		if (!dConfig.botOn) {
 			botOffCounter += 1;
@@ -46,6 +46,7 @@ const server = http.createServer(async function(req, res) {
 			}
 		}
 		console.log("[SERVER] Pinged page");
+		return;
 	}
 
 	if (q.pathname == "/index") {
@@ -55,6 +56,7 @@ const server = http.createServer(async function(req, res) {
 			res.write(data);
 			res.end();
 		});
+		return;
 	}
 
 	if (q.pathname == "/audio") {
@@ -70,6 +72,7 @@ const server = http.createServer(async function(req, res) {
 			console.log("ended!")
 			res.end();
 		});
+		return;
 	}
 
 	if (q.pathname == "/audiolink") {
@@ -90,8 +93,26 @@ const server = http.createServer(async function(req, res) {
 		catch (e) {
 			console.log("error: ", e);
 		}
+		return;
 	}
 
+	if(q.pathname == "/send"){
+		let s = q.query.s;
+		//console.log(req.payload);
+		s = req.body;
+		var data;
+	  const chunks = [];
+	  req.on('data', chunk => chunks.push(chunk));
+		req.on('end', () => {
+			let data = JSON.parse(Buffer.concat(chunks).toString());
+			if(data.text){
+				dConfig.channels.getMainChatChannel().send(data.text);
+			}
+			res.end();
+		});
+		return;
+	}
+	
 });
 
 server.listen(8080, () => { console.log("[SERVER] SERVER IS RUNNING!") });

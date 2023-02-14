@@ -8,11 +8,13 @@ async function on(interaction) {
 
 	if(interaction.customId.startsWith("mdl_playlist_add_musica")){
 		let id = interaction.customId.replace("mdl_playlist_add_musica", "");
-		let url = interaction.fields.getTextInputValue('inputUrl');;
+		let url = interaction.fields.getTextInputValue('inputUrl');
+		console.log("[MODAL mdl_playlist_add_musica] URL: ", url);
 		
 		await interaction.reply("Adicionando a musica...");
+		
 		if(!await playlistHandler.addMusicToPlaylist(url, id)){
-			await interaction.editReply("Faio em adicionar...");
+			await interaction.editReply("Falha em adicionar...");
 		}
 	}
 	

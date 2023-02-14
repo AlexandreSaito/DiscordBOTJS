@@ -1,5 +1,5 @@
 const playlistHandler = require('./../../playlistHandler.js');
-
+const discord = require("discord.js");
 // https://discordjs.guide/interactions/buttons.html#component-collectors
 
 async function on(interaction) {
@@ -20,20 +20,20 @@ async function onPlaylistHandler(interaction){
 	console.log("[INTERACTION BUTTON] PlaylistInfo: ", playlistInfo);
 	
 	if(interaction.customId.startsWith("playlist_adicionar_musica")){
-		const modal = new ModalBuilder()
+		const modal = new discord.ModalBuilder()
 			.setCustomId(`mdl_playlist_add_musica${playlistId}`)
 			.setTitle(`Adicionar musica em ${playlistInfo.name}`);
 
-		let inputUrl = new TextInputBuilder()
+		let inputUrl = new discord.TextInputBuilder()
 			.setCustomId('inputUrl')
 		    // The label is the prompt the user sees for this input
 			.setLabel("Youtube URL")
 		    // Short means only a single line of text
-			.setStyle(TextInputStyle.Short)
+			.setStyle(discord.TextInputStyle.Short)
 			.setRequired(true);
 		
-		let rowUrl = new ActionRowBuilder().addComponents(inputUrl);
-		modal.addComponents(rowUrl, secondActionRow);
+		let rowUrl = new discord.ActionRowBuilder().addComponents(inputUrl);
+		modal.addComponents(rowUrl);
 		
 		await interaction.showModal(modal);
 		return;

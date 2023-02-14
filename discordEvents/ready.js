@@ -31,7 +31,8 @@ function onReady() {
 			//member.send("Mais uma para ver se arrumei");
 		});
 		
-});
+	});
+	
 }
 
 module.exports = {

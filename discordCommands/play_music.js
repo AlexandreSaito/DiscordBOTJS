@@ -17,7 +17,7 @@ module.exports = {
 		.setDescription('Musiginha')
 		.addStringOption(option => 
 			option.setName("url")
-				.setDescription("YouTube URL")
+				.setDescription("YouTube URL ou Nome(YouTube Search apenas)")
 				.setRequired(true)),
 	async execute(interaction) {
 		audioHandler.addPlayMusic(interaction);
